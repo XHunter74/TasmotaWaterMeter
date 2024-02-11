@@ -2,7 +2,8 @@
 
 Decided to use the next fluid flow sensor to measure water consumption using ESP and Tasmota. 
 
-![image](https://github.com/XHunter74/TasmotaWaterMeter/assets/8713959/fc14041e-acdd-4a08-a7b2-2f5931868207)
+<img src="https://github.com/XHunter74/TasmotaWaterMeter/assets/8713959/fc14041e-acdd-4a08-a7b2-2f5931868207" width=400/>
+
   
 Everyone uses a script that counts pulses and, 
 depending on the number of pulses, water consumption is calculated. 
