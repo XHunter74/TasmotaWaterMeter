@@ -1,0 +1,80 @@
+>D
+; A valid script must start with >D in the first line
+
+; Variables are defined and initialized (p means permanent)
+; Total number of counted pulses
+p:TotalPulses=0
+;Variable to keep accumulated liters
+LiterAcc=0
+; Total number of measured liters
+p:TotalLiter=0
+; Initial offset for counter
+p:InitialOffset=0
+; Target counter value
+p:TargetValue=0
+; Variable for reset button
+resetb=0
+; Variable for set value button
+setvaluebutton=0
+delta=0
+tmp=0
+
+
+>B
+; >B is executed on BOOT time before sensors are initialized and on save script 
+; After boot restore "total number of counted pulses" back to latest state of ESP pulse counter 1 (pc[1]) 
+TotalPulses=pc[1]
+
+>S
+; >S is executed every second 
+; If reset button resetb has been pushed (resetb has been set to 1)
+if resetb==1
+then
+; The reset button variable resetb is set back to 0
+resetb=0
+; The total number of counted pulses is set back to 0
+TotalPulses=0
+; The total number of counted liters is set back to 0
+TotalLiter=0
+LiterAcc=0
+; ESP variable counter1 is set back to 0
+=>Counter1 0 
+endif
+
+if setvaluebutton==1
+then
+setvaluebutton=0
+InitialOffset=TargetValue-LiterAcc
+endif
+
+; Calulate instantaneous flow rate
+delta=pc[1]-TotalPulses
+TotalPulses=pc[1]
+
+tmp=delta/6.6/60
+print Instantaneous flow rate=%tmp%
+LiterAcc=LiterAcc+tmp
+TotalLiter=InitialOffset+LiterAcc
+
+; Every 5 seconds: Print status and publish via MQTT 
+if upsecs%5==0
+then
+; Print a summary in the tasmota log
+print Status: Total (in liter): %TotalLiter%, Total (in pulses): %TotalPulses%
+=>publish stat/%topic%/RESULT {"TotalLiter":%TotalLiter%,"TotalPulses":%TotalPulses%}
+endif
+;Save permanent variables
+if upsecs%10==0
+then
+svars
+endif
+
+>W
+; The lines in the >W section are displayed in the web UI main page.
+; Total number of measured liters (in liter)
+Total{m}%TotalLiter% Liter
+Initial offset{m}%InitialOffset% Liter
+
+; Button (variable name, text of ON state of button, text of OFF state of button)
+bu(setvaluebutton "Setting" "Set counter value")
+bu(resetb "Resetting" "Reset Total")
